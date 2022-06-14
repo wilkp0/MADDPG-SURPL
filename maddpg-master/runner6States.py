@@ -56,7 +56,7 @@ class Runner:
         high = []
         self.args.evaluate_rate=3*30
         self.args.graphing_rate = 3*20
-        self.args.time_steps = 3*15000
+        self.args.time_steps = 3*30000
         for time_step in tqdm(range(self.args.time_steps)):
             #self.env.render()
 #NEVER REACHES DONE BECAUSE OF THIS 
@@ -98,8 +98,8 @@ class Runner:
                 averew.append(x)
                 returns.append(y)
                 #averew, returns.append(self.evaluate())
-                low.append(-29)
-                high.append(-36)
+                low.append(-50)
+                high.append(-64)
                 plt.figure()
                 plt.plot(range(len(returns)), returns)
                 plt.plot(range(len(low)), low)
@@ -169,7 +169,7 @@ class Runner:
                 print('FCost', Cost, file=self.fileOut)
                 print('*'*25, file=self.fileOut)
                 '''
-            '''  
+            
             if time_step > 0 and time_step % self.args.graphing_rate == 0:
                 #print('Graphing', graphing)
                 energy = np.array(graphing)
@@ -207,17 +207,17 @@ class Runner:
                 
 
                 self.totalCost.append(-Cost)
-                self.low1.append(-16.5)
-                self.high1.append(-22)
+                self.low1.append(-25)
+                self.high1.append(-32)
                 plt.figure(10)
                 plt.plot(range(len(self.totalCost)), self.totalCost)
                 plt.plot(range(len(self.low1)), self.low1)
                 plt.plot(range(len(self.high1)), self.high1)
-                plt.ylim(-24,-12)
+                plt.ylim(-40,-20)
                 plt.xlabel('episodes * ' + str(self.args.evaluate_rate / self.episode_limit))
                 plt.ylabel('Costs')
                 plt.savefig(self.save_path + '/plt2.png', format='png') 
-            '''    
+                
 
     def evaluate(self):
         returns = []
