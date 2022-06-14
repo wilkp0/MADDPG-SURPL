@@ -18,9 +18,10 @@ class Runner:
         self.env = env
         self.agents = self._init_agents()
         self.buffer = Buffer(args)
-        now = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-        self.save_path = "/Users/Patrick Wilk/Documents/RL/JJ_first_Look/MADDPG_OAI/SURP_MARL/results/" + now + "/" + self.args.scenario_name
-        #self.save_path = self.args.save_dir + '/' + self.args.scenario_name
+        now = datetime.now().strftime("%m/%D/%Y_%H")
+        self.save_path = "/Users/Patrick Wilk/Documents/RL/MADDPG/results/" + self.args.scenario_name
+        sourceDir = "/Users/Patrick Wilk/Documents/RL/MADDPG"
+        self.fileOut = open(sourceDir + "/results/MADDPG2.txt", "w+")
 
 
         #if not os.path.exists(self.save_path):

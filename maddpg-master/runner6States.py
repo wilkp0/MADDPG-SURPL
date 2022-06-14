@@ -17,8 +17,10 @@ import matplotlib.pyplot as plt
 class Runner:
     def __init__(self, args, env):
         self.args = args
-        self.demand1 = [3,1,1]
-        self.demand2 = [3,1,1]
+
+        self.demand1 = [1,1,2,3,2,1]
+        self.demand2 = [1,1,2,3,2,1]
+
         self.totalCost = []
         self.low1 = []
         self.high1 = []
@@ -167,6 +169,7 @@ class Runner:
                 print('FCost', Cost, file=self.fileOut)
                 print('*'*25, file=self.fileOut)
                 '''
+            '''  
             if time_step > 0 and time_step % self.args.graphing_rate == 0:
                 #print('Graphing', graphing)
                 energy = np.array(graphing)
@@ -214,6 +217,7 @@ class Runner:
                 plt.xlabel('episodes * ' + str(self.args.evaluate_rate / self.episode_limit))
                 plt.ylabel('Costs')
                 plt.savefig(self.save_path + '/plt2.png', format='png') 
+            '''    
 
     def evaluate(self):
         returns = []
@@ -244,22 +248,3 @@ class Runner:
         print('Returns is', rewards)
         self.env.reset()
         return (sum(returns) / self.args.evaluate_episodes, rewards)
-    '''
-    def Solution(self):
-        print('graphing')
-        for time_step in tqdm(range(self.args.time_steps)):
-            self.args.evaluate_rate=3*30
-            s_next, r, done, info = self.env.step(actions)
-            self.args.time_steps = 3*30000
-            self.graph_limit = 3500
-            low = []
-            high = []
-            total_cost = []
-            if time_step % self.graph_limit == 0:
-                print(time_step)
-                append.energy
-                total_cost.append(cost)
-                high.append(8)
-                low.append(4.25)
-                matplotlib
-    '''

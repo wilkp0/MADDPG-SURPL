@@ -28,17 +28,17 @@ class Runner:
         self.env = env
         self.agents = self._init_agents()
         self.buffer = Buffer(args)
-       # C:\Users\Patrick Wilk\Documents\RL\JJ_first_Look\MADDPG_DPR\SURPL_MARL\results\04\04\27\22\2022_11\smart_building
-        #self.save_path = self.args.save_dir + '/' + self.args.scenario_name
+
         now = datetime.now().strftime("%m/%D/%Y_%H")
         self.save_path = "/Users/Patrick Wilk/Documents/RL/MADDPG/results/" + self.args.scenario_name
         sourceDir = "/Users/Patrick Wilk/Documents/RL/MADDPG"
         self.fileOut = open(sourceDir + "/results/MADDPG2.txt", "w+")
+
         #figDir = sourceDir + '/results/plt_figs'
         #if not os.path.exists(self.save_path):
             #os.makedirs(self.save_path)
             
-        self.writer = SummaryWriter(log_dir=self.save_path)
+
 
     def _init_agents(self):
         agents = []
@@ -54,7 +54,7 @@ class Runner:
         high = []
         self.args.evaluate_rate=3*30
         self.args.graphing_rate = 3*20
-        self.args.time_steps = 3*15000
+        self.args.time_steps = 3*30000
         for time_step in tqdm(range(self.args.time_steps)):
             #self.env.render()
 #NEVER REACHES DONE BECAUSE OF THIS 
@@ -66,7 +66,7 @@ class Runner:
             u = []
             graphing = []
             
-            #Generation new actions based on observations
+            #Generate new actions based on observations
             actions = []
             with torch.no_grad():
                 for agent_id, agent in enumerate(self.agents):
@@ -134,75 +134,39 @@ class Runner:
             np.save(self.save_path + '/returns.pkl', returns)
 
 
-            #img_grid = torchvision.utils.make_grid(returns)
-            #self.writer.add_image('example',img_grid)
-            #self.writer.close()
-            #sys.exit()
-            '''
-            FIX THIS TO HAVE DIFF INITAL STATES AND GRAPH CORRECTLY
+            
+            #FIX THIS TO HAVE DIFF INITAL STATES AND GRAPH CORRECTLY
             if time_step > 0 and time_step % self.args.graphing_rate == 0:
-                #print('Graphing', graphing)
+               #print('Graphing', graphing)
                 energy = np.array(graphing)
-                Usedenergy1 = (energy[0]* self.demand1) # working
-                Usedenergy2 = (energy[1]*self.demand2)
-                dCharge = np.add(Usedenergy1,Usedenergy2)
-                print('Energy1', Usedenergy1, file=self.fileOut)
-                print('Energy2', Usedenergy2, file=self.fileOut)                
-                comfort1 = np.subtract(self.demand1,Usedenergy1)
-                comfort2 = np.subtract(self.demand2,Usedenergy2)
-                print('1comfort', comfort1)
-                comfort = np.concatenate(comfort1 ,comfort2)
-                print('comf concat', comfort, file=self.fileOut)
-                print('comfort', comfort1)
-                comfort = comfort **2
-                Usedenergy = np.concatenate(Usedenergy1, Usedenergy2)
-                #print('concat', Usedenergy)
-                dCharge = max(dCharge)
-                Usedenergy = np.sum(Usedenergy)
-                print('UseedEnegy', Usedenergy, file=self.fileOut)
-                print('Comfort', comfort, file=self.fileOut)
-                print('DemandCharge', dCharge, file=self.fileOut)
-                
-                Cost = Usedenergy +sum(comfort)+ 2*dCharge 
-                print('FCost', Cost, file=self.fileOut)
-                print('*'*25, file=self.fileOut)
-                '''
-            if time_step > 0 and time_step % self.args.graphing_rate == 0:
-                #print('Graphing', graphing)
-                energy = np.array(graphing)
-             
+
                 #Usedenergy = (energy* self.demand1) # working
-                Usedenergy1 = (energy[0]* self.demand1)
-                Usedenergy2 = (energy[1]* self.demand2)
+                UsedenergySB = (energy[0]* self.demand)
+                UsedenergyEV = (energy[1]* self.required)
 
-                #dCharge = np.add(Usedenergy[0],Usedenergy[1])
-                dCharge = np.add(Usedenergy1,Usedenergy2)
+                dCharge = np.add(UsedenergySB,UsedenergyEV)
                 dCharge = max(dCharge)
 
-                print('Energy1', Usedenergy1) 
-                print ('Energy2', Usedenergy2) #,  file=self.fileOut)
-                #comfort = np.subtract([3,1,1],Usedenergy)
-                comfort1 = np.subtract(self.demand1,Usedenergy1)
-                comfort2 = np.subtract(self.demand2,Usedenergy2)
+                print('Energy1', UsedenergySB) 
+                print ('Energy2', UsedenergyEV) 
 
-                #print('1comfort', comfort1)
-                #print('2comfort', comfort2)
-                comfort = np.concatenate([comfort1] + [comfort2])
+                comfort = np.subtract(self.demand,UsedenergySB)
                 comfort = comfort **2
-                #print('comf concat', comfort) #, file=self.fileOut)
 
-                #print('concat', Usedenergy)
-                Usedenergy = np.concatenate([Usedenergy1] + [Usedenergy2])
+                penalty = np.subtract(self.required, sum(UsedenergyEV))
+                penalty = penalty**2
+
+                Usedenergy = np.concatenate([UsedenergySB] + [UsedenergyEV])
                 Usedenergy = np.sum(Usedenergy)
-                print('UseedEnegy', Usedenergy, file=self.fileOut)
+                print('UseedEnergy', Usedenergy, file=self.fileOut)
                 print('Comfort', comfort, file=self.fileOut)
+                print('Penalty', comfort, file=self.fileOut)
                 print('DemandCharge', dCharge, file=self.fileOut)
                 
-                Cost = Usedenergy +sum(comfort)+ 2*dCharge 
+                Cost = Usedenergy + sum(comfort) + 2*dCharge + penalty
                 print('FCost', Cost, file=self.fileOut)
                 print('*'*25, file=self.fileOut)
                 
-
                 self.totalCost.append(-Cost)
                 self.low1.append(-16.5)
                 self.high1.append(-22)
@@ -214,6 +178,7 @@ class Runner:
                 plt.xlabel('episodes * ' + str(self.args.evaluate_rate / self.episode_limit))
                 plt.ylabel('Costs')
                 plt.savefig(self.save_path + '/plt2.png', format='png') 
+
 
     def evaluate(self):
         returns = []
@@ -236,30 +201,7 @@ class Runner:
                 rewards += r[0]
                 s = s_next
             returns.append(rewards)
-            self.writer.add_scalar("Loss/train", sum(returns), episode)
-            self.writer.add_scalar("Loss/train", len(returns),sum(returns))
-            # self.writer.add_scalar("Loss/test", sum(returns), episode)
-            # self.writer.add_scalar("Accuracy/train", sum(returns), episode)
-            # self.writer.add_scalar("Accuracy/test", sum(returns), episode)
         print('Returns is', rewards)
         self.env.reset()
         return (sum(returns) / self.args.evaluate_episodes, rewards)
-    '''
-    def Solution(self):
-        print('graphing')
-        for time_step in tqdm(range(self.args.time_steps)):
-            self.args.evaluate_rate=3*30
-            s_next, r, done, info = self.env.step(actions)
-            self.args.time_steps = 3*30000
-            self.graph_limit = 3500
-            low = []
-            high = []
-            total_cost = []
-            if time_step % self.graph_limit == 0:
-                print(time_step)
-                append.energy
-                total_cost.append(cost)
-                high.append(8)
-                low.append(4.25)
-                matplotlib
-    '''
+ 
