@@ -119,16 +119,16 @@ class Scenario(BaseScenario):
     def SB_EV_reward(self, agent, world):
         cost = 0
         for a in world.agents:
-            if a.name == "SB" and 0 in a.state.c:
-                SBenergy = 25+(a.state.c*a.demands)
-                SBpenalty = (a.demands- SBenergy)**2
-                print('less than 0')
-            elif a.name == "SB":
+            #if a.name == "SB" and 0 in a.state.c:
+                #SBenergy = 10+(a.state.c*a.demands)
+                #SBpenalty = (a.demands- SBenergy)**2
+                #print('less than 0')
+            if a.name == "SB":
                 SBenergy = (a.state.c* a.demands)
                 SBpenalty = (a.demands- SBenergy)**2
             if a.name == "EV":
                 EVenergy = a.state.c*a.maxcharge
-                EVpenalty = 5*((a.required - (sum(EVenergy)))**2)
+                EVpenalty = 2*((a.required - (sum(EVenergy)))**2)
                 
 
 

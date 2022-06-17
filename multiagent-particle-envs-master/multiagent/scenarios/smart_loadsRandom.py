@@ -39,7 +39,7 @@ class Scenario(BaseScenario):
         #Future work: implementing it so that it can work with any number of input dimensions and entities
         world.actions = [[],[]]
         self.timeReset = 1
-        self.changeRate = 10
+        self.changeRate = 50
         num_agents = 2
         world.num_agents = num_agents
         world.dim_c = 3 
@@ -213,13 +213,15 @@ class Scenario(BaseScenario):
     def observation(self,agent,world):
         agent.prev_energy = agent.energy      
 
-
+        
         #agentStateAc = []
         #for agent in world.agents:
             #agentStateAc.append(agent.state.c)
         agentObs = []
         for agent in world.agents:
             agentObs.append(agent.state.c * agent.demands)
+
+        #TRY THIS WITH NEW EXP    
         #entityDemand = []
         #for agent in world.agents:
             #entityDemand.append(np.array(agent.demands))

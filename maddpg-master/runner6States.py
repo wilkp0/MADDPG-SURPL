@@ -40,7 +40,6 @@ class Runner:
         #if not os.path.exists(self.save_path):
             #os.makedirs(self.save_path)
             
-        self.writer = SummaryWriter(log_dir=self.save_path)
 
     def _init_agents(self):
         agents = []
@@ -56,7 +55,7 @@ class Runner:
         high = []
         self.args.evaluate_rate=3*30
         self.args.graphing_rate = 3*20
-        self.args.time_steps = 3*30000
+        self.args.time_steps = 3*40000
         for time_step in tqdm(range(self.args.time_steps)):
             #self.env.render()
 #NEVER REACHES DONE BECAUSE OF THIS 
@@ -135,40 +134,6 @@ class Runner:
             self.epsilon = max(0.05, self.noise - 0.0000005)
             np.save(self.save_path + '/returns.pkl', returns)
 
-
-            #img_grid = torchvision.utils.make_grid(returns)
-            #self.writer.add_image('example',img_grid)
-            #self.writer.close()
-            #sys.exit()
-            '''
-            FIX THIS TO HAVE DIFF INITAL STATES AND GRAPH CORRECTLY
-            if time_step > 0 and time_step % self.args.graphing_rate == 0:
-                #print('Graphing', graphing)
-                energy = np.array(graphing)
-                Usedenergy1 = (energy[0]* self.demand1) # working
-                Usedenergy2 = (energy[1]*self.demand2)
-                dCharge = np.add(Usedenergy1,Usedenergy2)
-                print('Energy1', Usedenergy1, file=self.fileOut)
-                print('Energy2', Usedenergy2, file=self.fileOut)                
-                comfort1 = np.subtract(self.demand1,Usedenergy1)
-                comfort2 = np.subtract(self.demand2,Usedenergy2)
-                print('1comfort', comfort1)
-                comfort = np.concatenate(comfort1 ,comfort2)
-                print('comf concat', comfort, file=self.fileOut)
-                print('comfort', comfort1)
-                comfort = comfort **2
-                Usedenergy = np.concatenate(Usedenergy1, Usedenergy2)
-                #print('concat', Usedenergy)
-                dCharge = max(dCharge)
-                Usedenergy = np.sum(Usedenergy)
-                print('UseedEnegy', Usedenergy, file=self.fileOut)
-                print('Comfort', comfort, file=self.fileOut)
-                print('DemandCharge', dCharge, file=self.fileOut)
-                
-                Cost = Usedenergy +sum(comfort)+ 2*dCharge 
-                print('FCost', Cost, file=self.fileOut)
-                print('*'*25, file=self.fileOut)
-                '''
             
             if time_step > 0 and time_step % self.args.graphing_rate == 0:
                 #print('Graphing', graphing)
@@ -240,11 +205,7 @@ class Runner:
                 rewards += r[0]
                 s = s_next
             returns.append(rewards)
-            self.writer.add_scalar("Loss/train", sum(returns), episode)
-            self.writer.add_scalar("Loss/train", len(returns),sum(returns))
-            # self.writer.add_scalar("Loss/test", sum(returns), episode)
-            # self.writer.add_scalar("Accuracy/train", sum(returns), episode)
-            # self.writer.add_scalar("Accuracy/test", sum(returns), episode)
+
         print('Returns is', rewards)
         self.env.reset()
         return (sum(returns) / self.args.evaluate_episodes, rewards)
