@@ -102,22 +102,13 @@ class World(object):
         for agent in self.scripted_agents:
             agent.action = agent.action_callback(agent, self)
    
-
         # update agent state
         for agent in self.agents:
             self.update_agent_state(agent)    
 
-           # if agent.name == 'SB1':
-                #print('TimeStep', self.time, file=fileOut)
-               # print("SB1 stepping: ", agent.energyList, file=fileOut)
-                
-                #print("SB1 Reward:" , )
-            #elif agent.name == 'SB2':
-               # print("SB2 stepping: ", agent.energyList, file=fileOut)
-               # print("*"*25, file=fileOut)
-               # print("*"*25, file=fileOut)
-
         self.time += 1
+
+
 
  
 
@@ -128,5 +119,6 @@ class World(object):
             agent.state.c = np.zeros(self.dim_c)
         else:
             #noise = np.random.randn(*agent.action.c.shape) * agent.c_noise if agent.c_noise else 0.0
-            agent.state.c = agent.action.c #+ noise      
+            agent.state.c = agent.action.c #+ noise  
+       
 

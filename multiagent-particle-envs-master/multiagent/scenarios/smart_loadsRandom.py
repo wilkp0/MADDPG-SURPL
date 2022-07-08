@@ -27,7 +27,11 @@ class Scenario(BaseScenario):
         figDir = sourceDir + '/results/plt_figs'
         self.save_path = "/Users/Patrick Wilk/Documents/RL/MADDPG/results/" + 'smart_loadsRandom'
 
+
+
         world = World()
+        self.inc = 1
+        self.sample = 0
         self.time_steps = 3*15000
         self.graphing_rate  = 2*30
         self.totalCost = []
@@ -48,6 +52,10 @@ class Scenario(BaseScenario):
         num_adversaries = 0
         self.demandCharge = []
 
+        self.optimal = []
+        self.nonoptimal = []
+        self.MAddpg = []
+
         world.collaborative = True
 
         if self.method != "main":
@@ -63,8 +71,8 @@ class Scenario(BaseScenario):
                 agent.name = 'SB1'
                 agent.demands = [3,1,1]
             elif i == 1:
-                agent.name = 'SB2'
-                agent.demands = [3,1,1]
+                agent.name = 'SB2' 
+                agent.demands = [1,1,3]
             agent.silent = False
             agent.movable = False
             agent.size = 0.1
@@ -92,11 +100,19 @@ class Scenario(BaseScenario):
         world.energy_costs = []
         self.total_reward = 0
 
+        if self.sample % 100 == 0:
+            self.sample = 0
+            self.totalCost = []
+            self.low = []
+            self.high = []
+ 
         #filling out agent detail
         for agent in world.agents:
             if agent.name == "SB1":
                 if self.timeReset % self.changeRate == 0:
-                        agent.demands = np.random.uniform(0,3,3)
+                        #agent.demands = np.random.uniform(0,3,3)
+                        agent.demands = [3,1,1]
+                        agent.demands = agent.demands + np.random.uniform(-0.3,0.3,3)
                 agent.min = 1
                 agent.energy = 0
                 agent.color = np.array([0.5,0.5,0.5])
@@ -104,7 +120,9 @@ class Scenario(BaseScenario):
                 agent.agent_callback = None
             if agent.name == "SB2":
                 if self.timeReset % self.changeRate == 0:
-                    agent.demands = np.random.uniform(0,3,3)
+                    #agent.demands = np.random.uniform(0,3,3)
+                    agent.demands = [1,1,3]
+                    agent.demands = agent.demands + np.random.uniform(-0.3,0.3,3)
                 agent.min = 1
                 agent.energy = 0
                 agent.color = np.array([0.5,0.5,0.5])
@@ -131,53 +149,69 @@ class Scenario(BaseScenario):
     def reward(self,agent,world):
         #agents are rewarded based on the minimal cost compared to demand
 
-        energy = [a.state.c * a.demands for a in world.agents]
-        demands = [a.demands for a in world.agents]
-        #Usedenergy = (energy* self.demand1) # working
-        Usedenergy1 = (energy[0])
-        Usedenergy2 = (energy[1])
 
-        #dCharge = np.add(Usedenergy[0],Usedenergy[1])
-        dCharge = np.add(Usedenergy1,Usedenergy2)
-        dCharge = max(dCharge)
+        if self.inc % self.graphing_rate ==0:
+            self.sample += 1
+            energy = [a.state.c * a.demands for a in world.agents]
+            demands = [a.demands for a in world.agents]
+            #Usedenergy = (energy* self.demand1) # working
+            Usedenergy1 = (energy[0])
+            Usedenergy2 = (energy[1])
 
-        #print('Energy1', Usedenergy1) 
-        #print ('Energy2', Usedenergy2) #,  file=self.fileOut)
-        #comfort = np.subtract([3,1,1],Usedenergy)
-        comfort1 = np.subtract(demands[0],Usedenergy1)
-        comfort2 = np.subtract(demands[1],Usedenergy2)
+            #dCharge = np.add(Usedenergy[0],Usedenergy[1])
+            dCharge = np.add(Usedenergy1,Usedenergy2)
+            dCharge = max(dCharge)
 
-        #print('1comfort', comfort1)
-        #print('2comfort', comfort2)
-        comfort = np.concatenate([comfort1] + [comfort2])
-        comfort = comfort **2
-        #print('comf concat', comfort) #, file=self.fileOut)
+            #print('Energy1', Usedenergy1) 
+            #print ('Energy2', Usedenergy2) #,  file=self.fileOut)
+            #comfort = np.subtract([3,1,1],Usedenergy)
+            comfort1 = np.subtract(demands[0],Usedenergy1)
+            comfort2 = np.subtract(demands[1],Usedenergy2)
 
-        #print('concat', Usedenergy)
-        Usedenergy = np.concatenate([Usedenergy1] + [Usedenergy2])
-        Usedenergy = np.sum(Usedenergy)
-        #print('UseedEnegy', Usedenergy, file=self.fileOut)
-        #print('Comfort', comfort, file=self.fileOut)
-        #print('DemandCharge', dCharge, file=self.fileOut)
+            #print('1comfort', comfort1)
+            #print('2comfort', comfort2)
+            comfort = np.concatenate([comfort1] + [comfort2])
+            comfort = comfort **2
+            #print('comf concat', comfort) #, file=self.fileOut)
+
+            #print('concat', Usedenergy)
+            Usedenergy = np.concatenate([Usedenergy1] + [Usedenergy2])
+            Usedenergy = np.sum(Usedenergy)
+            #print('UseedEnegy', Usedenergy, file=self.fileOut)
+            #print('Comfort', comfort, file=self.fileOut)
+            #print('DemandCharge', dCharge, file=self.fileOut)
+            
+            Cost = Usedenergy + sum(comfort) + 2*dCharge 
+            #print('FCost', Cost, file=self.fileOut)
+            #print('*'*25, file=self.fileOut)
+
+            OrigOpt = self.optimizer(agent,world)
+            #print( 'VALUES', OrigOpt)
+
+            self.totalCost.append(-Cost)
+            self.low.append(-OrigOpt[0])
+            self.high.append(-OrigOpt[1])
+
+            self.optimal.append(sum(self.low)/(self.sample))   #this should be the length of the array to find the average 
+            self.nonoptimal.append(sum(self.high)/self.sample)
+            self.MAddpg.append(sum(self.totalCost)/self.sample)
+      
+
+            plt.figure(2)
+            #plt.plot(range(len(self.totalCost)), self.totalCost)
+            #plt.plot(range(len(self.low)), self.low)
+            #plt.plot(range(len(self.high)), self.high)
+            plt.plot(range(len(self.optimal)), self.optimal)
+            plt.plot(range(len(self.nonoptimal)), self.nonoptimal)
+            plt.plot(range(len(self.MAddpg)), self.MAddpg)
+            
+            plt.ylim(-24,-12)
+            plt.xlabel('episodes * ' + str(self.evaluate_rate / self.episode_limit))
+            plt.ylabel('Average Costs')
+            plt.savefig(self.save_path + '/plt2.png', format='png')
+
+        self.inc +=1
         
-        Cost = Usedenergy + sum(comfort) + 2*dCharge 
-        #print('FCost', Cost, file=self.fileOut)
-        #print('*'*25, file=self.fileOut)
-
-        OrigOpt = self.optimizer(agent,world)
-        print( 'VALUES', OrigOpt)
-
-        self.totalCost.append(-Cost)
-        self.low.append(OrigOpt[0])
-        self.high.append(OrigOpt[1])
-        plt.figure(10)
-        plt.plot(range(len(self.totalCost)), self.totalCost)
-        plt.plot(range(len(self.low)), self.low)
-        plt.plot(range(len(self.high)), self.high)
-        #plt.ylim(-24,-12)
-        plt.xlabel('episodes * ' + str(self.evaluate_rate / self.episode_limit))
-        plt.ylabel('Costs')
-        plt.savefig(self.save_path + '/plt2.png', format='png')
 
         return self.SB_reward(agent,world) 
     
@@ -222,9 +256,9 @@ class Scenario(BaseScenario):
             agentObs.append(agent.state.c * agent.demands)
 
         #TRY THIS WITH NEW EXP    
-        #entityDemand = []
-        #for agent in world.agents:
-            #entityDemand.append(np.array(agent.demands))
+        entityDemand = []
+        for agent in world.agents:
+            entityDemand.append(np.array(agent.demands))
         
         #agentSum = []
         #for agent in world.agents:
@@ -239,11 +273,12 @@ class Scenario(BaseScenario):
         #print('1.1', agentStateAc)
         print('1', High)
         print('2', agentObs)
+        print('workinr', entityDemand)
         #print('3', entityDemand)
         #print('4', agentSum )
         #print(np.concatenate([High] + agentObs + entityDemand + agentSum))
 
-        return np.concatenate(agentObs+ [High] )
+        return np.concatenate(agentObs+ entityDemand+ [High] )
 
 
     def optimizer(self,agent,world):

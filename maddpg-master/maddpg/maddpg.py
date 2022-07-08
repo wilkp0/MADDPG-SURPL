@@ -1,13 +1,12 @@
 import torch
 import os
 import numpy as np
+from torch.utils.tensorboard import SummaryWriter
 from maddpg.actor_critic import Actor, Critic
 from matplotlib import pyplot as plt
-import matplotlib
-matplotlib.use("Qt5Agg")
 
-sourceDir = "/Users/Patrick Wilk/Documents/RL/JJ_first_Look/MADDPG_DPR/SURPL_MARL"
-figDir = sourceDir + '/results/plt_figs'
+
+
 
 
 class MADDPG:
@@ -17,6 +16,10 @@ class MADDPG:
         self.train_step = 0
         self.actorLossList = []
         self.criticLossList = []
+
+        #Summary Writer 
+        self.save_path = "/Users/Patrick Wilk/Documents/RL/MADDPG/results/" + self.args.scenario_name
+        self.writer = SummaryWriter(log_dir=self.save_path + "/logs2")
         # create the network
         self.actor_network = Actor(args, agent_id)
         self.critic_network = Critic(args)
@@ -33,6 +36,7 @@ class MADDPG:
         self.actor_optim = torch.optim.Adam(self.actor_network.parameters(), lr=self.args.lr_actor)
         self.critic_optim = torch.optim.Adam(self.critic_network.parameters(), lr=self.args.lr_critic)
 
+
         # create the dict for store the model
         if not os.path.exists(self.args.save_dir):
             os.mkdir(self.args.save_dir)
@@ -43,6 +47,8 @@ class MADDPG:
         self.model_path = self.model_path + '/' + 'agent_%d' % agent_id
         if not os.path.exists(self.model_path):
             os.mkdir(self.model_path)
+
+        
 
         # 加载模型
         if os.path.exists(self.model_path + '/actor_params.pkl'):
@@ -71,6 +77,7 @@ class MADDPG:
             o.append(transitions['o_%d' % agent_id])
             u.append(transitions['u_%d' % agent_id])
             o_next.append(transitions['o_next_%d' % agent_id])
+        
 
         # calculate the target Q value function
         u_next = []
@@ -111,6 +118,9 @@ class MADDPG:
             self.save_model(self.train_step)
         self.train_step += 1
 
+        #self.writer.add_histogram("testing train/reward", r, self.train_step)
+        self.writer.add_scalar("critic loss/train", critic_loss, self.train_step)
+        self.writer.add_scalar("actor loss/train", actor_loss, self.train_step)
     '''
         #AL =sum(actor_loss)
         #CL =sum(critic_loss)

@@ -18,7 +18,7 @@ class Runner:
     def __init__(self, args, env):
         self.args = args
         self.demand1 = [3,1,1]
-        self.demand2 = [3,1,1]
+        self.demand2 = [1,1,3]
         self.totalCost = []
         self.low1 = []
         self.high1 = []
@@ -54,7 +54,7 @@ class Runner:
         high = []
         self.args.evaluate_rate=3*30
         self.args.graphing_rate = 3*20
-        self.args.time_steps = 3*40000
+        self.args.time_steps = 3*16250
         for time_step in tqdm(range(self.args.time_steps)):
             #self.env.render()
 #NEVER REACHES DONE BECAUSE OF THIS 

@@ -38,7 +38,9 @@ class Runner:
         #if not os.path.exists(self.save_path):
             #os.makedirs(self.save_path)
             
-        self.writer = SummaryWriter(log_dir=self.save_path)
+        self.writer = SummaryWriter(log_dir=self.save_path + "/logs1/agent")
+        self.writerOpt = SummaryWriter(log_dir=self.save_path + "/logs1/opt")
+        self.writerOrig = SummaryWriter(log_dir=self.save_path + "/logs1/orig")
 
     def _init_agents(self):
         agents = []
@@ -54,7 +56,7 @@ class Runner:
         high = []
         self.args.evaluate_rate=3*30
         self.args.graphing_rate = 3*20
-        self.args.time_steps = 3*15000
+        self.args.time_steps = 3*32000
         for time_step in tqdm(range(self.args.time_steps)):
             #self.env.render()
 #NEVER REACHES DONE BECAUSE OF THIS 
@@ -96,15 +98,15 @@ class Runner:
                 averew.append(x)
                 returns.append(y)
                 #averew, returns.append(self.evaluate())
-                low.append(-29)
+                low.append(-29)##@
                 high.append(-36)
                 plt.figure()
-                plt.plot(range(len(returns)), returns)
-                plt.plot(range(len(low)), low)
-                plt.plot(range(len(high)), high)
-                plt.xlabel('episode * ' + str(self.args.evaluate_rate / self.episode_limit))
-                plt.ylabel('average returns')
-                plt.savefig(self.save_path + '/plt.png', format='png')
+                #plt.plot(range(len(returns)), returns)
+                #plt.plot(range(len(low)), low)
+                #plt.plot(range(len(high)), high)
+                #plt.xlabel('episode * ' + str(self.args.evaluate_rate / self.episode_limit))
+                #plt.ylabel('average returns')
+                #plt.savefig(self.save_path + '/plt.png', format='png')
 
 
 
@@ -201,19 +203,28 @@ class Runner:
                 Cost = Usedenergy +sum(comfort)+ 2*dCharge 
                 print('FCost', Cost, file=self.fileOut)
                 print('*'*25, file=self.fileOut)
-                
+                tensorOpt = -16.5
+                tensorOrig = -22
+
+                #for data in time_step:
+                self.writer.add_scalar("Cost per Episode", -Cost, time_step)
+                self.writerOpt.add_scalar("Cost per Episode", tensorOpt, time_step)
+                self.writerOrig.add_scalar("Cost per Episode", tensorOrig, time_step)
+
+                                                                 
+                #self.writer.add_scalar("Loss/train", -16.5,time_step)
 
                 self.totalCost.append(-Cost)
                 self.low1.append(-16.5)
                 self.high1.append(-22)
-                plt.figure(10)
-                plt.plot(range(len(self.totalCost)), self.totalCost)
-                plt.plot(range(len(self.low1)), self.low1)
-                plt.plot(range(len(self.high1)), self.high1)
-                plt.ylim(-24,-12)
-                plt.xlabel('episodes * ' + str(self.args.evaluate_rate / self.episode_limit))
-                plt.ylabel('Costs')
-                plt.savefig(self.save_path + '/plt2.png', format='png') 
+                #plt.figure(10)
+                #plt.plot(range(len(self.totalCost)), self.totalCost)
+                #plt.plot(range(len(self.low1)), self.low1)
+                #plt.plot(range(len(self.high1)), self.high1)
+                #plt.ylim(-24,-12)
+                #plt.xlabel('episodes * ' + str(self.args.evaluate_rate / self.episode_limit))
+                #plt.ylabel('Costs')
+                #plt.savefig(self.save_path + '/plt2.png', format='png') 
 
     def evaluate(self):
         returns = []
@@ -236,30 +247,11 @@ class Runner:
                 rewards += r[0]
                 s = s_next
             returns.append(rewards)
-            self.writer.add_scalar("Loss/train", sum(returns), episode)
-            self.writer.add_scalar("Loss/train", len(returns),sum(returns))
+
             # self.writer.add_scalar("Loss/test", sum(returns), episode)
             # self.writer.add_scalar("Accuracy/train", sum(returns), episode)
             # self.writer.add_scalar("Accuracy/test", sum(returns), episode)
         print('Returns is', rewards)
         self.env.reset()
         return (sum(returns) / self.args.evaluate_episodes, rewards)
-    '''
-    def Solution(self):
-        print('graphing')
-        for time_step in tqdm(range(self.args.time_steps)):
-            self.args.evaluate_rate=3*30
-            s_next, r, done, info = self.env.step(actions)
-            self.args.time_steps = 3*30000
-            self.graph_limit = 3500
-            low = []
-            high = []
-            total_cost = []
-            if time_step % self.graph_limit == 0:
-                print(time_step)
-                append.energy
-                total_cost.append(cost)
-                high.append(8)
-                low.append(4.25)
-                matplotlib
-    '''
+ 

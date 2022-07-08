@@ -35,6 +35,11 @@ class Runner:
         sourceDir = "/Users/Patrick Wilk/Documents/RL/MADDPG"
         self.fileOut = open(sourceDir + "/results/MADDPG2.txt", "w+")
 
+
+
+        self.writer = SummaryWriter(log_dir=self.save_path + "/logs1/agent")
+        self.writerOpt = SummaryWriter(log_dir=self.save_path + "/logs1/opt")
+        self.writerOrig = SummaryWriter(log_dir=self.save_path + "/logs1/orig")
         #figDir = sourceDir + '/results/plt_figs'
         #if not os.path.exists(self.save_path):
             #os.makedirs(self.save_path)
@@ -55,7 +60,7 @@ class Runner:
         high = []
         self.args.evaluate_rate=3*30
         self.args.graphing_rate = 3*20
-        self.args.time_steps = 3*15000
+        self.args.time_steps = 3*32000
         for time_step in tqdm(range(self.args.time_steps)):
             #self.env.render()
 #NEVER REACHES DONE BECAUSE OF THIS 
@@ -166,18 +171,26 @@ class Runner:
                 Cost = Usedenergy + sum(comfort) + 2*dCharge + penalty
                 print('FCost', Cost, file=self.fileOut)
                 print('*'*25, file=self.fileOut)
+
+                tensorOpt = -10.25
+                tensorOrig = -15
+
+                #for data in time_step:
+                self.writer.add_scalar("Cost per Episode", -Cost, time_step)
+                self.writerOpt.add_scalar("Cost per Episode", tensorOpt, time_step)
+                self.writerOrig.add_scalar("Cost per Episode", tensorOrig, time_step)
                 
                 self.totalCost.append(-Cost)
                 self.low1.append(-10.25)
                 self.high1.append(-15)
-                plt.figure(10)
-                plt.plot(range(len(self.totalCost)), self.totalCost)
-                plt.plot(range(len(self.low1)), self.low1)
-                plt.plot(range(len(self.high1)), self.high1)
-                plt.ylim(-18,-9)
-                plt.xlabel('episodes * ' + str(self.args.evaluate_rate / self.episode_limit))
-                plt.ylabel('Costs')
-                plt.savefig(self.save_path + '/plt2.png', format='png') 
+                #plt.figure(10)
+                #plt.plot(range(len(self.totalCost)), self.totalCost)
+                #plt.plot(range(len(self.low1)), self.low1)
+                #plt.plot(range(len(self.high1)), self.high1)
+                #plt.ylim(-18,-9)
+                #plt.xlabel('episodes * ' + str(self.args.evaluate_rate / self.episode_limit))
+                #plt.ylabel('Costs')
+                #plt.savefig(self.save_path + '/plt2.png', format='png') 
 
     def evaluate(self):
         returns = []
