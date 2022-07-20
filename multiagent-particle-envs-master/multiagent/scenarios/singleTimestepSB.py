@@ -104,11 +104,12 @@ class Scenario(BaseScenario):
     def reward(self,agent,world):
         print('AT REWARD', file=fileOut)
         print('WORLD TIME', world.time)
-        if world.time == 3:
+        #if world.time == 3 and agent.name == 'SB2':
+            #self.reset_world(world)
             #dCharge = np.array([(a.state.c*a.demands) for a in world.agents])
             #dCharge = max(np.add(dCharge[0], dCharge[1]))
             #self.done = True
-            self.reset_world(world)
+            
 
         #world.time +=1 
         if world.time == 3:
@@ -120,58 +121,61 @@ class Scenario(BaseScenario):
         #agents are rewarded based on the minimal cost compared to demand
         #dCharge = self.demandCharge(agent,world)
         
-        for agent in world.agents:
-            if agent.name == 'SB1':
-                print('Time Step', world.time)
-                print('Energy SB1', agent.state.c* agent.demands[world.time-1])
-                print('Demand SB1', agent.demands[world.time-1])
-                print('Charge', dCharge)
-                
-            if agent.name == 'SB2':
-                print('Time Step', world.time)
-                print('Eneryg SB2', agent.state.c* agent.demands[world.time-1])
-                print('Demand SB2', agent.demands[world.time-1])
-                print('Charge', dCharge)
+
+        #if agent.name == 'SB1':
+        print(agent.name)
+        print('Time Step', world.time)
+        print('Energy', agent.state.c* agent.demands[world.time-1])
+        print('Demand', agent.demands[world.time-1])
+        print('Charge', dCharge)
+            
+        #if agent.name == 'SB2':
+            #print('Time Step', world.time)
+            #print('Eneryg SB2', agent.state.c* agent.demands[world.time-1])
+            #print('Demand SB2', agent.demands[world.time-1])
+            #print('Charge', dCharge)
                 #print('SB2', self.SB2_reward(agent,world))
         #print('States:', [a.state.c for a in world.agents])
         #print('Agent Demand', [a.demands for a in world.agents])
         #print("Energy Both: ", [a.state.c * a.demands for a in world.agents])
         #print('Demand Charge', dCharge) 
-        #print('cost', self.SB1_reward(agent,world)+self.SB2_reward(agent,world)+ dCharge)
+        print('cost', self.SB1_reward(agent,world)+self.SB2_reward(agent,world)+ dCharge)
         print('*' *25)
         
 
-        return self.SB1_reward(agent,world) + self.SB2_reward(agent,world) + dCharge
+        return self.SB1_reward(agent,world)  + dCharge + self.SB2_reward(agent,world)
     
     def SB1_reward(self, agent, world):
         print('SB1 REWARD', file=fileOut)
         #print('SB1 time', world.time)
         cost = 0
-        for a in world.agents:
-            if a.name == 'SB1':
+        for agent in world.agents:
+            if agent.name == 'SB1':
                 if 0 in agent.state.c:
-                    cost = -np.sum((a.state.c*a.demands[world.time-1]) + 10*(a.demands[world.time-1]-(a.state.c*a.demands[world.time-1]))**2)
+                    cost = -np.sum((agent.state.c*agent.demands[world.time-1]) + 10*(agent.demands[world.time-1]-(agent.state.c*agent.demands[world.time-1]))**2)
                 else: 
-                    cost = -np.sum((a.state.c* a.demands[world.time-1]) + (a.demands[world.time-1]- (a.state.c* a.demands[world.time-1]))**2)
-                #print('SB1 Energy', a.state.c* a.demands[world.time-1] )
+                    cost = -np.sum((agent.state.c* agent.demands[world.time-1]) + (agent.demands[world.time-1]- (agent.state.c* agent.demands[world.time-1]))**2)
+                    #print('SB1 Energy', a.state.c* a.demands[world.time-1] )
         return cost
-
+    
     def SB2_reward(self, agent, world):
         print('SB2 REWARD', file=fileOut)
         #print('SB2 time', world.time)
         cost = 0
-        for a in world.agents:
-            if a.name == 'SB2':
+        for agent in world.agents:
+            if agent.name == 'SB2':
                 if 0 in agent.state.c:
-                    cost = -np.sum((a.state.c* a.demands[world.time-1]) + 10*(a.demands[world.time-1]- (a.state.c* a.demands[world.time-1]))**2 )
+                    cost = -np.sum((agent.state.c* agent.demands[world.time-1]) + 10*(agent.demands[world.time-1]- (agent.state.c* agent.demands[world.time-1]))**2 )
                 else:
-                    cost = -np.sum((a.state.c* a.demands[world.time-1]) + (a.demands[world.time-1]- (a.state.c* a.demands[world.time-1]))**2 )
+                    cost = -np.sum((agent.state.c* agent.demands[world.time-1]) + (agent.demands[world.time-1]- (agent.state.c* agent.demands[world.time-1]))**2 )
                 #print('SB2 Energy', a.state.c* a.demands[world.time-1] )
         return cost
     
 
     def observation(self,agent,world):
         print('OBSERVATION', file=fileOut)
+        if world.time == 4:
+            world.time =0
         agent.prev_energy = agent.energy    
 
         agentObs = []

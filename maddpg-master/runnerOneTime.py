@@ -1,7 +1,7 @@
 from tqdm import tqdm
 from agent import Agent
 from common.replay_buffer import Buffer
-#from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 import torch
 #import torchvision
 #import torchvision.transforms as transforms
@@ -33,7 +33,9 @@ class Runner:
         #if not os.path.exists(self.save_path):
             #os.makedirs(self.save_path)
             
-        #self.writer = SummaryWriter(log_dir=self.save_path)
+        self.writer = SummaryWriter(log_dir=self.save_path + "/logs1/agent")
+        self.writerOpt = SummaryWriter(log_dir=self.save_path + "/logs1/opt")
+        self.writerOrig = SummaryWriter(log_dir=self.save_path + "/logs1/orig")
 
     def _init_agents(self):
         agents = []
@@ -44,7 +46,7 @@ class Runner:
 
     def run(self):
         self.episode_limit = 3
-        self.args.time_steps = 3*15000
+        self.args.time_steps = 3*32000
 
         self.args.evaluate_rate=3*30
         self.args.graphing_rate = 3*20
@@ -55,6 +57,7 @@ class Runner:
             # reset the environment  
 
             if time_step % self.episode_limit == 0:
+                print('RESETING')
                 s = self.env.reset()
             u = []
 
@@ -68,8 +71,8 @@ class Runner:
             for i in range(self.args.n_agents, self.args.n_players):
                 actions.append([0, np.random.rand() * 2 - 1, 0, np.random.rand() * 2 - 1, 0])
             s_next, r, done, info = self.env.step(actions)
-            if done == True:
-                self.env.reset()
+            #if done:
+                #s = self.env.reset()
             self.buffer.store_episode(s[:self.args.n_agents], u, r[:self.args.n_agents], s_next[:self.args.n_agents])
             s = s_next
             if self.buffer.current_size >= self.args.batch_size:
@@ -79,12 +82,19 @@ class Runner:
                     other_agents.remove(agent)
                     agent.learn(transitions, other_agents)
             if time_step > 0 and time_step % self.args.evaluate_rate == 0:
-                returns.append(self.evaluate())
-                plt.figure()
-                plt.plot(range(len(returns)), returns)
-                plt.xlabel('episode * ' + str(self.args.evaluate_rate / self.episode_limit))
-                plt.ylabel('average returns')
-                plt.savefig(self.save_path + '/plt.png', format='png')
+                agentsReward = self.evaluate()
+                #plt.figure()
+                #plt.plot(range(len(returns)), returns)
+                #plt.xlabel('episode * ' + str(self.args.evaluate_rate / self.episode_limit))
+                #plt.ylabel('average returns')
+                #plt.savefig(self.save_path + '/plt.png', format='png')
+                tensorOpt = -16.5
+                tensorOrig = -2
+                print('LOOK HERE for reward',  sum(r)/ self.args.evaluate_episodes)
+                self.writer.add_scalar("Cost per Episode", sum(r)/self.args.evaluate_episodes, time_step)
+                self.writerOpt.add_scalar("Cost per Episode", tensorOpt, time_step)
+                self.writerOrig.add_scalar("Cost per Episode", tensorOrig, time_step)
+
             self.noise = max(0.05, self.noise - 0.0000005)
             self.epsilon = max(0.05, self.epsilon - 0.0000005)
             np.save(self.save_path + '/returns.pkl', returns)
@@ -109,4 +119,5 @@ class Runner:
                 s = s_next
             returns.append(rewards)
         print('Returns is', rewards)
-        return sum(returns) / self.args.evaluate_episodes
+        #print('eveluate episodes', self.args.evaluate_episodes)
+        return sum (returns) / self.args.evaluate_episodes

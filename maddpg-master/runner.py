@@ -56,7 +56,7 @@ class Runner:
         high = []
         self.args.evaluate_rate=3*30
         self.args.graphing_rate = 3*20
-        self.args.time_steps = 3*32000
+        self.args.time_steps = 3*15000
         for time_step in tqdm(range(self.args.time_steps)):
             #self.env.render()
 #NEVER REACHES DONE BECAUSE OF THIS 
@@ -106,32 +106,10 @@ class Runner:
                 #plt.plot(range(len(high)), high)
                 #plt.xlabel('episode * ' + str(self.args.evaluate_rate / self.episode_limit))
                 #plt.ylabel('average returns')
-                #plt.savefig(self.save_path + '/plt.png', format='png')
+                #plt.savefig(self.save_path + '/plt.png', format='png'
 
-
-
-                for count, i in enumerate(self.env.world.actions):
-                    p = 0
-                    q = 0
-                    u = []
-                    for j in range(1, len(i), 3):
-                        u.append(sum(i[j-1:j+2]))
-
-
-                    plt.figure()
-                    plt.plot(u[-100:])
-                    plt.ylabel("Action")
-                    plt.xlabel("Time Step")
-                    label = ""
-                    if count == 0:
-                        label = "Smart Building 1"
-                    elif count == 1:
-                        label ="Smart Building 2"
-                    plt.title(label)
-                    plt.savefig(self.save_path + "/" + label + ".png", format ='png')
-                    plt.close('all')
-
-            self.noise = max(0.05, self.noise - 0.0000005)
+            #self.noise = max(0.05, self.noise -  0.0000005)
+            self.noise = max(0.005, self.noise -  0.000005)
             self.epsilon = max(0.05, self.noise - 0.0000005)
             np.save(self.save_path + '/returns.pkl', returns)
 

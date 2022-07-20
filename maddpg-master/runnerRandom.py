@@ -1,3 +1,4 @@
+from pkg_resources import yield_lines
 from tqdm import tqdm
 from agent import Agent
 from common.replay_buffer import Buffer
@@ -18,7 +19,7 @@ class Runner:
     def __init__(self, args, env):
         self.args = args
         self.demand1 = [3,1,1]
-        self.demand2 = [1,1,3]
+        self.demand2 = [3,1,1]
         self.totalCost = []
         self.low1 = []
         self.high1 = []
@@ -37,8 +38,7 @@ class Runner:
         #figDir = sourceDir + '/results/plt_figs'
         #if not os.path.exists(self.save_path):
             #os.makedirs(self.save_path)
-            
-        self.writer = SummaryWriter(log_dir=self.save_path)
+    
 
     def _init_agents(self):
         agents = []
@@ -54,7 +54,7 @@ class Runner:
         high = []
         self.args.evaluate_rate=3*30
         self.args.graphing_rate = 3*20
-        self.args.time_steps = 3*16250
+        self.args.time_steps = 3*32000
         for time_step in tqdm(range(self.args.time_steps)):
             #self.env.render()
 #NEVER REACHES DONE BECAUSE OF THIS 
@@ -98,90 +98,20 @@ class Runner:
                 #averew, returns.append(self.evaluate())
                 low.append(-29)
                 high.append(-36)
-                plt.figure()
-                plt.plot(range(len(returns)), returns)
-                plt.plot(range(len(low)), low)
-                plt.plot(range(len(high)), high)
-                plt.xlabel('episode * ' + str(self.args.evaluate_rate / self.episode_limit))
-                plt.ylabel('average returns')
-                plt.savefig(self.save_path + '/plt.png', format='png')
+                #plt.figure()
+                #plt.plot(range(len(returns)), returns)
+                #plt.plot(range(len(low)), low)
+                #plt.plot(range(len(high)), high)
+                #plt.xlabel('episode * ' + str(self.args.evaluate_rate / self.episode_limit))
+                #plt.ylabel('average returns')
+                #plt.savefig(self.save_path + '/plt.png', format='png')
 
 
-
-                for count, i in enumerate(self.env.world.actions):
-                    p = 0
-                    q = 0
-                    u = []
-                    for j in range(1, len(i), 3):
-                        u.append(sum(i[j-1:j+2]))
-
-
-                    plt.figure()
-                    plt.plot(u[-100:])
-                    plt.ylabel("Action")
-                    plt.xlabel("Time Step")
-                    label = ""
-                    if count == 0:
-                        label = "Smart Building 1"
-                    elif count == 1:
-                        label ="Smart Building 2"
-                    plt.title(label)
-                    plt.savefig(self.save_path + "/" + label + ".png", format ='png')
-                    plt.close('all')
-
-            self.noise = max(0.05, self.noise - 0.0000005)
+            self.noise = max(0.005, self.noise -  0.000005)
             self.epsilon = max(0.05, self.noise - 0.0000005)
             np.save(self.save_path + '/returns.pkl', returns)
 
-            '''
-            if time_step > 0 and time_step % self.args.graphing_rate == 0:
-                #print('Graphing', graphing)
-                energy = np.array(graphing)
-             
-                #Usedenergy = (energy* self.demand1) # working
-                Usedenergy1 = (energy[0]* self.demand1)
-                Usedenergy2 = (energy[1]* self.demand2)
-
-                #dCharge = np.add(Usedenergy[0],Usedenergy[1])
-                dCharge = np.add(Usedenergy1,Usedenergy2)
-                dCharge = max(dCharge)
-
-                print('Energy1', Usedenergy1) 
-                print ('Energy2', Usedenergy2) #,  file=self.fileOut)
-                #comfort = np.subtract([3,1,1],Usedenergy)
-                comfort1 = np.subtract(self.demand1,Usedenergy1)
-                comfort2 = np.subtract(self.demand2,Usedenergy2)
-
-                #print('1comfort', comfort1)
-                #print('2comfort', comfort2)
-                comfort = np.concatenate([comfort1] + [comfort2])
-                comfort = comfort **2
-                #print('comf concat', comfort) #, file=self.fileOut)
-
-                #print('concat', Usedenergy)
-                Usedenergy = np.concatenate([Usedenergy1] + [Usedenergy2])
-                Usedenergy = np.sum(Usedenergy)
-                print('UseedEnegy', Usedenergy, file=self.fileOut)
-                print('Comfort', comfort, file=self.fileOut)
-                print('DemandCharge', dCharge, file=self.fileOut)
-                
-                Cost = Usedenergy +sum(comfort)+ 2*dCharge 
-                print('FCost', Cost, file=self.fileOut)
-                print('*'*25, file=self.fileOut)
-                
-
-                self.totalCost.append(-Cost)
-                self.low1.append(-16.5)
-                self.high1.append(-22)
-                plt.figure(10)
-                plt.plot(range(len(self.totalCost)), self.totalCost)
-                plt.plot(range(len(self.low1)), self.low1)
-                plt.plot(range(len(self.high1)), self.high1)
-                plt.ylim(-24,-12)
-                plt.xlabel('episodes * ' + str(self.args.evaluate_rate / self.episode_limit))
-                plt.ylabel('Costs')
-                plt.savefig(self.save_path + '/plt2.png', format='png') 
-                '''
+  
     def evaluate(self):
         returns = []
         self.args.evaluate_episode_len = 1
@@ -203,8 +133,7 @@ class Runner:
                 rewards += r[0]
                 s = s_next
             returns.append(rewards)
-            self.writer.add_scalar("Loss/train", sum(returns), episode)
-            self.writer.add_scalar("Loss/train", len(returns),sum(returns))
+
             # self.writer.add_scalar("Loss/test", sum(returns), episode)
             # self.writer.add_scalar("Accuracy/train", sum(returns), episode)
             # self.writer.add_scalar("Accuracy/test", sum(returns), episode)

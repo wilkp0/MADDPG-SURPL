@@ -1,4 +1,4 @@
-from runnerSBEV import Runner
+from runnerRandom import Runner
 from common.arguments import get_args
 from common.utils import make_env
 import numpy as np

@@ -3,16 +3,14 @@ import cvxpy as cp
 from multiagent.core import World, Agent, Landmark
 from multiagent.scenario import BaseScenario
 from datetime import datetime
+from torch.utils.tensorboard import SummaryWriter
 from matplotlib import pyplot as plt
 import matplotlib
 matplotlib.use("Qt5Agg")
 
 now = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
 
-sourceDir = "/Users/Patrick Wilk/Documents/RL/JJ_first_Look/MADDPG_DPR/SURPL_MARL"
-fileOut = open(sourceDir + "/results/MADDPG2.txt", "w+")
-figDir = sourceDir + '/results/plt_figs'
-save_path = "/Users/Patrick Wilk/Documents/RL/MADDPG/results/" + '2SBnEV'
+
 
 
 
@@ -21,6 +19,12 @@ class Scenario(BaseScenario):
     def __init__(self):
         #self.day_reward = True
         self.method = "main"
+        #fileOut = open(sourceDir + "/results/MADDPG2.txt", "w+")
+        #figDir = sourceDir + '/results/plt_figs'
+        self.save_path = "/Users/Patrick Wilk/Documents/RL/MADDPG/results/" + '2SBnEV'
+        self.writer = SummaryWriter(log_dir=self.save_path + "/logs1/agent")
+        self.writerOpt = SummaryWriter(log_dir=self.save_path + "/logs1/opt")
+        self.writerOrig = SummaryWriter(log_dir=self.save_path + "/logs1/orig")
 
     def make_world(self):
         world = World()
@@ -152,18 +156,20 @@ class Scenario(BaseScenario):
             self.nonoptimal.append(sum(self.high)/self.sample)
             self.MAddpg.append(sum(self.totalCost)/self.sample)
       
-
-            plt.figure(2)
+            self.writer.add_scalar("Cost per Episode", MADCost, self.inc)
+            self.writerOpt.add_scalar("Cost per Episode", -OrigOpt[0], self.inc)
+            self.writerOrig.add_scalar("Cost per Episode", -OrigOpt[1], self.inc)
+            #plt.figure(2)
             #plt.plot(range(len(self.totalCost)), self.totalCost)
             #plt.plot(range(len(self.low)), self.low)
             #plt.plot(range(len(self.high)), self.high)
-            plt.plot(range(len(self.optimal)), self.optimal)
-            plt.plot(range(len(self.nonoptimal)), self.nonoptimal)
-            plt.plot(range(len(self.MAddpg)), self.MAddpg)
+            #plt.plot(range(len(self.optimal)), self.optimal)
+            #plt.plot(range(len(self.nonoptimal)), self.nonoptimal)
+            #plt.plot(range(len(self.MAddpg)), self.MAddpg)
             
-            plt.xlabel('episodes * ')
-            plt.ylabel('Average Costs')
-            plt.savefig(save_path + '/plt2.png', format='png')
+            #plt.xlabel('episodes * ')
+            #plt.ylabel('Average Costs')
+            #plt.savefig(save_path + '/plt2.png', format='png')
 
         self.inc +=1        
         #agents are rewarded based on the minimal cost compared to demand
@@ -207,6 +213,7 @@ class Scenario(BaseScenario):
         print('*^'*25)
 
 
+
         cost = -(2*dCharge + SB1cost + SB2cost + EVcost)
         print ('Cost: ', cost)
         return cost
@@ -247,7 +254,7 @@ class Scenario(BaseScenario):
             if agent.name == 'EV':
                 agentStateAc.append(agent.state.c*agent.maxcharge)
 
-        maxCharge = []
+        maxCharge1 = []
         for agent in world.agents:
             if agent.name == 'SB1':
                energySB1 = (agent.state.c * agent.demands)
@@ -256,7 +263,8 @@ class Scenario(BaseScenario):
             if agent.name == 'EV':
                 energyEV = (agent.state.c*agent.maxcharge)
                 maxCharges = np.add(energySB1,energySB2)
-                maxCharge.append(max(np.add(maxCharges,energyEV)))
+                maxCharge1.append(max(np.add(maxCharges,energyEV)))
+                #maxCharge1=(max(np.add(maxCharges,energyEV)))
 
 
         #High = []
@@ -270,11 +278,11 @@ class Scenario(BaseScenario):
 
 
         print('1', agentStateAc)
-        print('2', maxCharge)
-        #print('3', agentStateAc)
+        print('2', maxCharge1)
+        #print('3', np.concatenate(agentStateAc + [maxCharge1]))
         #print('4', agentSum )
 
-        return np.concatenate(agentStateAc + [maxCharge])#(agentObs + entityDemand+ agentStateAc + agentSum)
+        return np.concatenate(agentStateAc + [maxCharge1])#(agentObs + entityDemand+ agentStateAc + agentSum)
 
 
     def optimizer(self,agent,world):
@@ -295,6 +303,7 @@ class Scenario(BaseScenario):
 
         constraints = [0 <= load1, 
                     0 <= load2,
+                    0 <= load3,
                     demand3 == cp.sum(load3) ]
 
             ############## CALCULATIONS ###############
